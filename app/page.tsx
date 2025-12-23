@@ -2,15 +2,45 @@ import { Metadata } from "next";
 import { CMSAdapter } from "@/lib/cms-adapter";
 import HomePageClient from "@/components/home-page-client";
 
+// Force dynamic rendering since we fetch from CMS
+export const dynamic = 'force-dynamic';
+export const revalidate = 60; // Revalidate every 60 seconds
+
+// Default SEO data as fallback
+const defaultSEO = {
+  title: "Professional Cleaning Services | Clensy",
+  description: "Professional cleaning services for homes and offices in New Jersey. Book online in 30 seconds. 100% satisfaction guaranteed.",
+  keywords: "cleaning services, house cleaning, professional cleaners, New Jersey",
+  canonicalUrl: "https://clensy.com",
+  robots: "index, follow",
+  openGraph: {
+    title: "Professional Cleaning Services | Clensy",
+    description: "Book professional cleaning services online in 30 seconds.",
+    image: "",
+    type: "website",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Professional Cleaning Services | Clensy",
+    description: "Book professional cleaning services online in 30 seconds.",
+  },
+  schemaJsonLd: null,
+  additionalSchemas: [],
+  scripts: { head: "", bodyStart: "", bodyEnd: "" },
+  customCss: "",
+};
+
 // Generate dynamic metadata from Strapi
 export async function generateMetadata(): Promise<Metadata> {
-  const seo = await CMSAdapter.getLandingPageSEO();
-
-  if (!seo) {
-    return {
-      title: "Professional Cleaning Services | Clensy",
-      description: "Professional cleaning services for homes and offices in New Jersey.",
-    };
+  let seo = defaultSEO;
+  
+  try {
+    const fetchedSeo = await CMSAdapter.getLandingPageSEO();
+    if (fetchedSeo) {
+      seo = fetchedSeo;
+    }
+  } catch (error) {
+    console.error("Failed to fetch SEO data:", error);
   }
 
   return {
@@ -48,15 +78,24 @@ export async function generateMetadata(): Promise<Metadata> {
 
 // Server component that fetches SEO data and renders client component
 export default async function Home() {
-  const seo = await CMSAdapter.getLandingPageSEO();
+  let seo = defaultSEO;
+  
+  try {
+    const fetchedSeo = await CMSAdapter.getLandingPageSEO();
+    if (fetchedSeo) {
+      seo = fetchedSeo;
+    }
+  } catch (error) {
+    console.error("Failed to fetch SEO data for page:", error);
+  }
 
   return (
     <HomePageClient
-      schemaJsonLd={seo?.schemaJsonLd}
-      additionalSchemas={seo?.additionalSchemas}
-      headScripts={seo?.scripts.head}
-      bodyEndScripts={seo?.scripts.bodyEnd}
-      customCss={seo?.customCss}
+      schemaJsonLd={seo.schemaJsonLd}
+      additionalSchemas={seo.additionalSchemas}
+      headScripts={seo.scripts.head}
+      bodyEndScripts={seo.scripts.bodyEnd}
+      customCss={seo.customCss}
     />
   );
 }

@@ -29,7 +29,7 @@ async function fetchFromStrapi<T>(
     revalidate?: number;
   } = {}
 ): Promise<T | null> {
-  const { populate, filters } = options;
+  const { populate, filters, revalidate = 60 } = options;
   
   const params = new URLSearchParams();
   
@@ -64,7 +64,7 @@ async function fetchFromStrapi<T>(
         'Content-Type': 'application/json',
         ...(STRAPI_API_TOKEN && { Authorization: `Bearer ${STRAPI_API_TOKEN}` }),
       },
-      cache: 'no-store',
+      next: { revalidate }, // Use ISR instead of no-store
     });
     
     if (!response.ok) {
