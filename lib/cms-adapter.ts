@@ -111,6 +111,41 @@ export function getImageUrl(image: any): string {
  */
 export class CMSAdapter {
   /**
+   * Get Landing Page SEO data
+   */
+  static async getLandingPageSEO() {
+    const landingPage = await this.getLandingPage();
+    if (!landingPage) return null;
+
+    return {
+      title: landingPage.seoTitle || 'Professional Cleaning Services | Clensy',
+      description: landingPage.seoMetaDescription || 'Professional cleaning services for homes and offices.',
+      keywords: landingPage.seoKeywords || '',
+      canonicalUrl: landingPage.seoCanonicalUrl || 'https://clensy.com',
+      robots: landingPage.seoRobots || 'index, follow',
+      openGraph: {
+        title: landingPage.ogTitle || landingPage.seoTitle || '',
+        description: landingPage.ogDescription || landingPage.seoMetaDescription || '',
+        image: getImageUrl(landingPage.ogImage) || landingPage.ogImageUrl || '',
+        type: landingPage.ogType || 'website',
+      },
+      twitter: {
+        card: landingPage.twitterCard || 'summary_large_image',
+        title: landingPage.twitterTitle || landingPage.ogTitle || '',
+        description: landingPage.twitterDescription || landingPage.ogDescription || '',
+      },
+      schemaJsonLd: landingPage.schemaJsonLd || null,
+      additionalSchemas: landingPage.additionalSchemas || [],
+      scripts: {
+        head: landingPage.headScripts || '',
+        bodyStart: landingPage.bodyStartScripts || '',
+        bodyEnd: landingPage.bodyEndScripts || '',
+      },
+      customCss: landingPage.customCss || '',
+    };
+  }
+
+  /**
    * Get Landing Page (all homepage sections in one call)
    */
   static async getLandingPage() {

@@ -16,7 +16,7 @@ interface Location {
 
 export default function Navbar() {
   const [scrollPosition, setScrollPosition] = useState(0);
-  const [visible, setVisible] = useState(true);
+  const [visible, setVisible] = useState(true);  
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [openDropdown, setOpenDropdown] = useState<string | null>(null);
   
