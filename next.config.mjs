@@ -28,6 +28,20 @@ const nextConfig = {
     }
     return config;
   },
+  // Add headers for Strapi preview iframe embedding
+  async headers() {
+    return [
+      {
+        source: '/:path*',
+        headers: [
+          {
+            key: 'Content-Security-Policy',
+            value: "frame-ancestors 'self' http://localhost:1337 https://*.railway.app https://*.up.railway.app https://strapi-production-8d56.up.railway.app;",
+          },
+        ],
+      },
+    ];
+  },
 };
 
 export default nextConfig;

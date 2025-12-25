@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { draftMode } from "next/headers";
 import CMSAdapter from "@/lib/cms-adapter";
 
 // Get service data by slug
@@ -21,8 +22,11 @@ export async function GET(
       );
     }
     
-    // Try Strapi first
-    const strapiData = await CMSAdapter.getServiceBySlug(slug);
+    // Check if draft mode is enabled (for preview)
+    const { isEnabled: isDraftMode } = await draftMode();
+    
+    // Try Strapi first - pass draft status if in preview mode
+    const strapiData = await CMSAdapter.getServiceBySlug(slug, isDraftMode ? 'draft' : 'published');
     if (strapiData) {
       return NextResponse.json({ success: true, data: strapiData, source: 'strapi' });
     }

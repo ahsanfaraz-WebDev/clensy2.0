@@ -68,11 +68,20 @@ async function fetchFromStrapi<T>(
   const url = `${base}/api${path}${queryString ? `?${queryString}` : ''}`;
   
   try {
+    const headers: HeadersInit = {
+      'Content-Type': 'application/json',
+      ...(STRAPI_API_TOKEN && { Authorization: `Bearer ${STRAPI_API_TOKEN}` }),
+    };
+
+    // Add draft mode header if status is draft (for preview)
+    // Note: For Live Preview, the calling function should pass status='draft'
+    // and set the strapi-encode-source-maps header
+    if (options.status === 'draft') {
+      headers['strapi-encode-source-maps'] = 'true';
+    }
+
     const response = await fetch(url, {
-      headers: {
-        'Content-Type': 'application/json',
-        ...(STRAPI_API_TOKEN && { Authorization: `Bearer ${STRAPI_API_TOKEN}` }),
-      },
+      headers,
       cache: 'no-store',
     });
     
@@ -687,21 +696,22 @@ export class CMSAdapter {
   /**
    * Get Location by Slug
    */
-  static async getLocationBySlug(slug: string) {
+  static async getLocationBySlug(slug: string, status: 'draft' | 'published' = 'published') {
     if (!slug) return null;
 
-    // try published first
+    // try with specified status first
     let result = await fetchFromStrapi<StrapiResponse<any[]>>('/locations', {
       filters: { slug: { $eq: slug } },
       populate: '*',
-      status: 'published',
+      status: status,
     });
-    // fallback to draft
+    // fallback to opposite status if not found
     if (!result?.data || result.data.length === 0) {
+      const fallbackStatus = status === 'published' ? 'draft' : 'published';
       result = await fetchFromStrapi<StrapiResponse<any[]>>('/locations', {
         filters: { slug: { $eq: slug } },
         populate: '*',
-        status: 'draft',
+        status: fallbackStatus,
       });
     }
     // Fallback: fetch all and filter client-side (avoids slug/filters issues)
@@ -830,21 +840,22 @@ export class CMSAdapter {
   /**
    * Get Service by Slug
    */
-  static async getServiceBySlug(slug: string) {
+  static async getServiceBySlug(slug: string, status: 'draft' | 'published' = 'published') {
     if (!slug) return null;
 
-    // try published first
+    // try with specified status first
     let result = await fetchFromStrapi<StrapiResponse<any[]>>('/services', {
       filters: { slug: { $eq: slug } },
       populate: '*',
-      status: 'published',
+      status: status,
     });
-    // fallback to draft
+    // fallback to opposite status if not found
     if (!result?.data || result.data.length === 0) {
+      const fallbackStatus = status === 'published' ? 'draft' : 'published';
       result = await fetchFromStrapi<StrapiResponse<any[]>>('/services', {
         filters: { slug: { $eq: slug } },
         populate: '*',
-        status: 'draft',
+        status: fallbackStatus,
       });
     }
     // Fallback: fetch all and filter client-side

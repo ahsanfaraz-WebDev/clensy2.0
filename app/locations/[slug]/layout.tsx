@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { draftMode } from "next/headers";
 import CMSAdapter from "@/lib/cms-adapter";
 
 export const revalidate = 60;
@@ -8,7 +9,9 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
   const { slug } = await params;
   
   try {
-    const location = await CMSAdapter.getLocationBySlug(slug);
+    // Check if draft mode is enabled (for preview)
+    const { isEnabled: isDraftMode } = await draftMode();
+    const location = await CMSAdapter.getLocationBySlug(slug, isDraftMode ? 'draft' : 'published');
     
     if (!location || !location.seo) {
       return {
